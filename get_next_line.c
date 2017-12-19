@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#define BUFF_SIZE 8
+#define BUFF_SIZE 10
 
 int		ft_alloc(char *s)
 {
@@ -35,60 +35,69 @@ int		ft_end_line_find(char *s, char c, int n)
 	while (*s || n > 0)
 	{
 		if (*s == c)
+		{
+			printf("k = %d\n", k);
 			return (k);
+		}
 		k++;
 		s++;
 		n--;
 	}
-	printf("%s\n", k);
 	return (0);
 }
 
 int		get_next_line(const int fd, char **line)
 {
 	int i;
-	static char *str = NULL;
+	int k;
+	static char *str;
 
 	if (!str)
-		str = ft_strnew(BUFF_SIZE);
-	//printf("%zu\n", ft_strlen(str));
-	while((i = read(fd, *line, BUFF_SIZE)) > 0)
 	{
-		//printf("0");
-		if ((ft_end_line_find(*line, '\n', BUFF_SIZE)) != 0)
+		//printf("%s\n", "ft_strnew");
+		str = ft_strnew(BUFF_SIZE);
+		*line = ft_strnew(BUFF_SIZE);
+	}
+	while((i = read(fd, str, BUFF_SIZE)) > 0)
+	{
+	//	printf("%s\n", "WHILE");
+		if ((k = ft_end_line_find(str, '\n', BUFF_SIZE)) != 0)
 		{
-			printf("%s\n", "1");
-			str = ft_memcpy(str, *line, ft_end_line_find(*line, '\n', BUFF_SIZE));
+		//	printf("%s\n", "IF");
+			ft_strncat(*line, str, --k);
+		//	printf("%s\n", *line);
+			ft_strdel(&str);
 			return (1);
 		}
 		else
 		{
-			str = ft_memcpy(str, *line, BUFF_SIZE);
-			ft_alloc(str);
+	//		printf("%s\n", "ELSE");
+			ft_strncat(*line, str, BUFF_SIZE);
+		//	printf("line :%s\n", *line);
+			ft_alloc(*line);
+			str = ft_strnew(BUFF_SIZE);
 		}
 	}
-	printf("%s", str);
-	return (1);
+	return (0);
 }
 
 int		main(int argc, char **argv)
 {
-	char **line;
+	char *line;
 	int fd;
-//	size_t size;
-
-	//printf("-1");
-	//size = ft_strlen(argv[1]);
-	//printf("-1");
-	line = (char **)malloc(sizeof(line) * 1);
-	*line = (char *)malloc(sizeof(char) * 1000);
-	fd = open(argv[1], O_RDONLY); 
+	fd = open(argv[1], O_RDONLY);
 //	printf("fd = %d\n", fd);
-	get_next_line(fd, &(*line));
-	//close(fd);
+//	printf("%d\n", get_next_line(fd, &(*line)));
+//	get_next_line(fd, &line);
+//	printf("%s", line);
+	while ((get_next_line(fd, &line) > 0))
+	{
+		printf("%s\n", line);
+		ft_strdel(&line);
+	}
+	close(fd);
 	return (0);
 }
-
 
 
 
