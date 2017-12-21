@@ -11,7 +11,7 @@
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#define BUFF_SIZE 10
+#define BUFF_SIZE 15
 
 int		ft_alloc(char *s)
 {
@@ -46,37 +46,48 @@ int		ft_end_line_find(char *s, char c, int n)
 	return (0);
 }
 
+int		ft_after(char *line, char *src)
+{
+	
+}
+
 int		get_next_line(const int fd, char **line)
 {
 	int i;
 	int k;
-	static char *str;
+	static char *str = NULL;
+	char *tmp;
 
+	tmp = ft_strnew(BUFF_SIZE);
+	*line = ft_strnew(BUFF_SIZE);
 	if (!str)
-	{
-		//printf("%s\n", "ft_strnew");
 		str = ft_strnew(BUFF_SIZE);
-		*line = ft_strnew(BUFF_SIZE);
-	}
-	while((i = read(fd, str, BUFF_SIZE)) > 0)
+	else
+		ft_after(*line, str);
+	while ((i = read(fd, tmp, BUFF_SIZE) > 0))
 	{
-	//	printf("%s\n", "WHILE");
-		if ((k = ft_end_line_find(str, '\n', BUFF_SIZE)) != 0)
+	//	printf("%s\n", "INWHILE");
+		if ((k = ft_end_line_find(tmp, '\n', BUFF_SIZE)) > 0)
 		{
-		//	printf("%s\n", "IF");
-			ft_strncat(*line, str, --k);
-		//	printf("%s\n", *line);
-			ft_strdel(&str);
+	//		printf("%s\n","IF");
+			ft_strncat(*line, tmp, k);
+			line[0][--k] = '\0'; //*line[--k] ???
+			//printf("LINE[k] = %c\n", *line[0]);
+			if (k != BUFF_SIZE)
+			{
+				str = ft_memchr(tmp, '\n', BUFF_SIZE);
+			//	printf("STR = %s\n", str);
+			}
+			ft_strdel(&tmp);
 			return (1);
 		}
 		else
 		{
-	//		printf("%s\n", "ELSE");
-			ft_strncat(*line, str, BUFF_SIZE);
-		//	printf("line :%s\n", *line);
-			ft_alloc(*line);
-			str = ft_strnew(BUFF_SIZE);
+		//	printf("%s\n", "ELSE");
+			ft_strncat(*line, tmp, BUFF_SIZE);
+		//	printf("%s\n", *line);
 		}
+		ft_alloc(*line);
 	}
 	return (0);
 }
@@ -88,19 +99,16 @@ int		main(int argc, char **argv)
 	fd = open(argv[1], O_RDONLY);
 //	printf("fd = %d\n", fd);
 //	printf("%d\n", get_next_line(fd, &(*line)));
-//	get_next_line(fd, &line);
-//	printf("%s", line);
-	while ((get_next_line(fd, &line) > 0))
-	{
-		printf("%s\n", line);
-		ft_strdel(&line);
-	}
+	get_next_line(fd, &line);
+	printf("%s", line);
+	// while ((get_next_line(fd, &line) > 0))
+	// {
+	// 	printf("%s\n", line);
+	// 	ft_strdel(&line);
+	// }
 	close(fd);
 	return (0);
 }
-
-
-
 
 
 
