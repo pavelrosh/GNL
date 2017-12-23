@@ -71,6 +71,38 @@ char	*ft_after(char *line, char *str, size_t n)
 	return (str);
 }
 
+int		ft_read(const int fd, char **line)
+{
+	int i;
+	int k;
+	static char *str;
+	char *tmp;
+
+	tmp = ft_strnew(BUFF_SIZE);
+	*line = ft_strnew(BUFF_SIZE);
+	while ((i = read(fd, tmp, BUFF_SIZE) > 0))
+	{
+		// printf("READ = %s\n", tmp);
+		// printf("%s\n", "INWHILE");
+		if ((k = ft_end_line_find(tmp, '\n', BUFF_SIZE)) > 0)
+		{
+			ft_strncat(*line, tmp, k);
+			line[0][ft_strlen(*line) - 1] = '\0'; //*line[--k] ???
+			str = ft_memchr(tmp, '\n', BUFF_SIZE);
+			// printf("STR = %s\n", str);
+			return (1);
+		}
+		else
+		{
+		//	printf("%s\n", "ELSE");
+			ft_strncat(*line, tmp, BUFF_SIZE);
+		//	printf("%s\n", *line);
+		}
+		ft_alloc(*line);
+	}
+	return (0);
+}
+
 int		get_next_line(const int fd, char **line)
 {
 	int i;
@@ -79,38 +111,43 @@ int		get_next_line(const int fd, char **line)
 	char *tmp;
 
 	tmp = ft_strnew(BUFF_SIZE);
-	//printf("STR :%s\n", str);
+	*line = ft_strnew(BUFF_SIZE);
+	printf("STR :%s\n", str);
 	//printf("line - %s\n", *line);
 	if (str)
 	{
 		str = ft_after(*line, str, BUFF_SIZE);
 		ft_alloc(*line);
-	//	printf("LINE after ft :%s\n", *line);
+		printf("LINE after ft :%s\n", *line);
+		printf("STR after ft :%s\n", str);
+		if (!str)
+			if (ft_read() == 0)
+				return (0);
+
 	}
 	else
 	{
-		*line = ft_strnew(BUFF_SIZE);
-		while ((i = read(fd, tmp, BUFF_SIZE) > 0))
-		{
-			// printf("READ = %s\n", tmp);
-			// printf("%s\n", "INWHILE");
-			if ((k = ft_end_line_find(tmp, '\n', BUFF_SIZE)) > 0)
-			{
-				ft_strncat(*line, tmp, k);
-				line[0][ft_strlen(*line) - 1] = '\0'; //*line[--k] ???
-			//printf("final line :%s", *line);
-				str = ft_memchr(tmp, '\n', BUFF_SIZE);
-	//				printf("STR = %s\n", str);
-				return (1);
-			}
-			else
-			{
-			//	printf("%s\n", "ELSE");
-				ft_strncat(*line, tmp, BUFF_SIZE);
-			//	printf("%s\n", *line);
-			}
-			ft_alloc(*line);
-		}
+	// 	while ((i = read(fd, tmp, BUFF_SIZE) > 0))
+	// 	{
+	// 		// printf("READ = %s\n", tmp);
+	// 		// printf("%s\n", "INWHILE");
+	// 		if ((k = ft_end_line_find(tmp, '\n', BUFF_SIZE)) > 0)
+	// 		{
+	// 			ft_strncat(*line, tmp, k);
+	// 			line[0][ft_strlen(*line) - 1] = '\0'; //*line[--k] ???
+	// 		//printf("final line :%s", *line);
+	// 			str = ft_memchr(tmp, '\n', BUFF_SIZE);
+	// //				printf("STR = %s\n", str);
+	// 			return (1);
+	// 		}
+	// 		else
+	// 		{
+	// 		//	printf("%s\n", "ELSE");
+	// 			ft_strncat(*line, tmp, BUFF_SIZE);
+	// 		//	printf("%s\n", *line);
+	// 		}
+	// 		ft_alloc(*line);
+	// 	}
 		return (0);
 	}
 	return (1);

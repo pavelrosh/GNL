@@ -27,6 +27,7 @@ int		main(int argc, char **argv)
 	while ((get_next_line(fd, &line) > 0))
 	{
 		printf("%s\n", line);
+		ft_strdel(&line);
 	}
 	close(fd);
 	return (0);
