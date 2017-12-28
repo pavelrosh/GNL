@@ -19,7 +19,7 @@ $(NAME):
 	@gcc $(SRC)
 
 clean:
-	rm -f *.gch
+	@rm -f *.gch
 
 re: clean
 	$(NAME)
