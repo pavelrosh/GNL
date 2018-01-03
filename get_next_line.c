@@ -13,18 +13,17 @@
 #include "get_next_line.h"
 #include <stdio.h>
 
-static int		ft_alloc(char *s)
+static char		*ft_new_size_alloc(char **s)
 {
 	char *tmp;
 
-	if (!(tmp = ft_strnew(ft_strlen(s))))
-		return (0);
-	ft_strcpy(tmp, s);
-	if (!(s = ft_strnew(ft_strlen(tmp) + BUFF_SIZE)))
-		return (0);
-	ft_strcpy(s,tmp);
-	free(tmp);
-	return (1);
+	if ((tmp = ft_strnew(ft_strlen(*s) + BUFF_SIZE)) != NULL)
+		ft_memmove(tmp, *s, ft_strlen(*s));
+	else
+		return (NULL);
+	free(*s);
+	*s = NULL;
+	return (tmp);
 }
 
 static int		ft_end_line_find(char *s, char c, int n)
@@ -35,10 +34,7 @@ static int		ft_end_line_find(char *s, char c, int n)
 	while (*s || n > 0)
 	{
 		if (*s == c)
-		{
-		//	printf("k = %d\n", k);
 			return (k);
-		}
 		k++;
 		s++;
 		n--;
@@ -46,128 +42,79 @@ static int		ft_end_line_find(char *s, char c, int n)
 	return (0);
 }
 
-static char		*ft_after(char *line, char *str, size_t n)
+static void		ft_after(char **line, char **str, size_t n)
 {
 	int k;
 
 	k = 0;
-//	printf("ft_after STR: %s\n", str);
-	ft_bzero(line, ft_strlen(line));
-	if ((k = ft_end_line_find(str, '\n', n)) > 0)
+	ft_bzero(*line, ft_strlen(*line));
+	if ((k = ft_end_line_find(*str, '\n', n)) > 0)
 	{
-		//printf("%s\n", "ft_end_line_find");
-		ft_strncat(line, str, k);
-		line[--k] = '\0';
-		str = ft_memchr(str, '\n', n);
-	//	str = ft_strchr(str, '\n');
-	//	printf("IN AFTER line: %s\n", line);
-	//	printf("IN AFTER str :%s\n", str);
+		ft_strncat(*line, *str, k);
+		line[0][ft_strlen(*line) - 1] = '\0';
+		*str = ft_strsub(*str, k, n);
 	}
 	else
 	{
-		ft_strncat(line, str, n);
-		str = NULL;
-	//	printf("ft_after - else : %s\n", line);
-	//	printf("STR in else :%s\n", str);
+		ft_strncat(*line, *str, n);
+		*str = NULL;
 	}
-	return (str);
+	*line = ft_new_size_alloc(line);
 }
 
-static char		*ft_read(int fd, char **line, char *str)
+static int		ft_read(int fd, char **line, char **str, char *tmp)
 {
-	int i;
-	int k;
-	char *tmp;
+	int		i;
+	int		k;
+	char	*tmp2;
 
-	tmp = ft_strnew(BUFF_SIZE);
-	while ((i = read(fd, tmp, BUFF_SIZE) > 0))
+	while ((i = read(fd, tmp, BUFF_SIZE)) > 0)
 	{
-	//	printf("i = %d\n", i);
-	//	printf("READ = %s\n", tmp);
-		// printf("%s\n", "INWHILE");
 		if ((k = ft_end_line_find(tmp, '\n', BUFF_SIZE)) > 0)
 		{
-		//	printf("%s\n", "FIND");
 			ft_strncat(*line, tmp, k);
 			line[0][ft_strlen(*line) - 1] = '\0';
-			str = ft_memchr(tmp, '\n', BUFF_SIZE);
-		//	printf("STR = %s\n", str);
-		//	printf("IF-LINE = %s\n", *line);
-		//	free(tmp);
-			return (str);
+			*str = ft_strsub(tmp, k, BUFF_SIZE);
+			tmp = NULL;
+			return (1);
 		}
-		else
-		{
-		//	printf("TMP BEFORE :%s\n", tmp);
-			*line = ft_strjoin(*line, tmp);
-			if (ft_strlen(tmp) < BUFF_SIZE)
-				break ;
-		//	printf("TMP :%s\n", tmp);
-		//	printf("LINE :%s\n", *line);
-		//	printf("str = %s\n", str);
-		}
-		ft_alloc(*line);
-		//printf("tmp-len %zu\n", ft_strlen(tmp));
+		tmp2 = *line;
+		*line = ft_strjoin(*line, tmp);
+		free(tmp2);
 		ft_bzero(tmp, ft_strlen(tmp));
-		//printf("tmp-len %zu\n", ft_strlen(tmp));
+		*line = ft_new_size_alloc(line);
 	}
-	free(tmp);
-//	printf("last LINE :%s\n", *line);
-	if (i <= 0)
-		return (NULL);
-	return (*line);
+	if (i <= 0 && ft_strlen(*line) != 0)
+		return (1);
+	if (i == -1)
+		return (-1);
+	return (0);
 }
 
 int				get_next_line(const int fd, char **line)
 {
-	static char *str = NULL;
+	static char *str[FD_AMOUNT];
+	char		*tmp;
+	int			er;
 
-	*line = ft_strnew(BUFF_SIZE);
-//	printf("STR : %s\n", str);
-//	printf("line : %s\n", *line);
-	if (fd < 0)
+	if (fd < 0 || line == NULL)
 		return (-1);
-	if (str != NULL)
+	*line = ft_strnew(BUFF_SIZE);
+	tmp = ft_strnew(BUFF_SIZE);
+	if (str[fd] == NULL)
 	{
-		str = ft_after(*line, str, BUFF_SIZE);
-		ft_alloc(*line);
-	//	printf("if-line :%s\n", *line);
-		// printf("if-str :%s\n", str);
-		if (str == NULL)
-		{
-			if ((str = ft_read(fd, line, str)) == NULL)
-			{
-			//	printf("if-if-if line = %s\n", *line);
-			//	printf("if-if-if str = %s\n", str);
-				return (0);
-			}
-			//printf("if-if-if line = %s\n", *line);
-			// printf("if-if-if str = %s\n", str);
-			return (1);
-		}
+		if ((er = ft_read(fd, line, &str[fd], tmp)) == 0)
+			return (0);
+		if (er == -1)
+			return (-1);
+		return (1);
 	}
-	else
+	ft_after(line, &str[fd], BUFF_SIZE);
+	if (str[fd] == NULL)
 	{
-		if ((str = ft_read(fd, line, str)) == NULL)
-		{
-		//	printf("LINE : %s\n", *line);
-		//	printf("if-if-if str = %s\n", str);
-			return(0);
-		}
+		if ((ft_read(fd, line, &str[fd], tmp)) == 0)
+			return (0);
 		return (1);
 	}
 	return (1);
 }
-
-// - leaks
-// - BUFF_SIZE == 1 without '\n'
-// - BUFF_SIZE == 9999 && 100000
-// - doesn't check closed fd
-
-
-
-
-
-
-
-
