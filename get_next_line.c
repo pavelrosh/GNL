@@ -11,7 +11,6 @@
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
 static char		*ft_new_size_alloc(char **s)
 {
@@ -31,7 +30,7 @@ static int		ft_end_line_find(char *s, char c, int n)
 	int k;
 
 	k = 1;
-	while (*s || n > 0)
+	while (*s && n > 0)
 	{
 		if (*s == c)
 			return (k);
@@ -52,7 +51,7 @@ static void		ft_after(char **line, char **str, size_t n)
 	{
 		ft_strncat(*line, *str, k);
 		line[0][ft_strlen(*line) - 1] = '\0';
-		*str = ft_strsub(*str, k, n);
+		*str = ft_memchr(*str, '\n', n) + 1;
 	}
 	else
 	{
@@ -74,7 +73,7 @@ static int		ft_read(int fd, char **line, char **str, char *tmp)
 		{
 			ft_strncat(*line, tmp, k);
 			line[0][ft_strlen(*line) - 1] = '\0';
-			*str = ft_strsub(tmp, k, BUFF_SIZE);
+			*str = ft_memchr(tmp, '\n', BUFF_SIZE) + 1;
 			tmp = NULL;
 			return (1);
 		}
@@ -93,26 +92,26 @@ static int		ft_read(int fd, char **line, char **str, char *tmp)
 
 int				get_next_line(const int fd, char **line)
 {
-	static char *str[FD_AMOUNT];
+	static char *str;
 	char		*tmp;
 	int			er;
 
-	if (fd < 0 || line == NULL)
+	if (fd < 0 || line == NULL || BUFF_SIZE <= 0)
 		return (-1);
 	*line = ft_strnew(BUFF_SIZE);
 	tmp = ft_strnew(BUFF_SIZE);
-	if (str[fd] == NULL)
+	if (str == NULL)
 	{
-		if ((er = ft_read(fd, line, &str[fd], tmp)) == 0)
+		if ((er = ft_read(fd, line, &str, tmp)) == 0)
 			return (0);
 		if (er == -1)
 			return (-1);
 		return (1);
 	}
-	ft_after(line, &str[fd], BUFF_SIZE);
-	if (str[fd] == NULL)
+	ft_after(line, &str, BUFF_SIZE);
+	if (str == NULL)
 	{
-		if ((ft_read(fd, line, &str[fd], tmp)) == 0)
+		if ((ft_read(fd, line, &str, tmp)) == 0)
 			return (0);
 		return (1);
 	}

@@ -17,20 +17,29 @@ int		main(int argc, char **argv)
 {
 	char *line;
 	int fd;
+//	int fd1;
 	int i;
 
 	if (argc != 2)
 		return (0);
 	i = 0;
 	fd = open(argv[1], O_RDONLY);
+//	fd1 = open(argv[2], O_RDONLY);
 	line = NULL;
 	while ((i = get_next_line(fd, &line)) > 0)
 	{
-	//	printf("%d\n", i);
+	//	printf("i = %d\n", i);
 		printf("%s\n", line);
 		ft_strdel(&line);
 	}
-	// close(fd);
-	// printf("%d\n", fd);
+	// while ((i = get_next_line(fd1, &line)) > 0)
+	// {
+	// //	printf("i = %d\n", i);
+	// 	printf("%s\n", line);
+	// 	ft_strdel(&line);
+	// }
+	close(fd);
+	// close(fd1);
+
  	return (0);
 }
