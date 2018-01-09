@@ -61,12 +61,13 @@ static void		ft_after(char **line, char **str, size_t n)
 	*line = ft_new_size_alloc(line);
 }
 
-static int		ft_read(int fd, char **line, char **str, char *tmp)
+static int		ft_read(int fd, char **line, char **str)
 {
-	int		i;
-	int		k;
-	char	*tmp2;
+	int			i;
+	int			k;
+	static char	tmp[BUFF_SIZE + 1];
 
+	ft_bzero(tmp, BUFF_SIZE + 1);
 	while ((i = read(fd, tmp, BUFF_SIZE)) > 0)
 	{
 		if ((k = ft_end_line_find(tmp, '\n', BUFF_SIZE)) > 0)
@@ -74,12 +75,9 @@ static int		ft_read(int fd, char **line, char **str, char *tmp)
 			ft_strncat(*line, tmp, k);
 			line[0][ft_strlen(*line) - 1] = '\0';
 			*str = ft_memchr(tmp, '\n', BUFF_SIZE) + 1;
-			tmp = NULL;
 			return (1);
 		}
-		tmp2 = *line;
-		*line = ft_strjoin(*line, tmp);
-		free(tmp2);
+		ft_strncat(*line, tmp, BUFF_SIZE);
 		ft_bzero(tmp, ft_strlen(tmp));
 		*line = ft_new_size_alloc(line);
 	}
@@ -92,26 +90,24 @@ static int		ft_read(int fd, char **line, char **str, char *tmp)
 
 int				get_next_line(const int fd, char **line)
 {
-	static char *str;
-	char		*tmp;
+	static char *str[FD_AMOUNT];
 	int			er;
 
 	if (fd < 0 || line == NULL || BUFF_SIZE <= 0)
 		return (-1);
 	*line = ft_strnew(BUFF_SIZE);
-	tmp = ft_strnew(BUFF_SIZE);
-	if (str == NULL)
+	if (str[fd] == NULL)
 	{
-		if ((er = ft_read(fd, line, &str, tmp)) == 0)
+		if ((er = ft_read(fd, line, &str[fd])) == 0)
 			return (0);
 		if (er == -1)
 			return (-1);
 		return (1);
 	}
-	ft_after(line, &str, BUFF_SIZE);
-	if (str == NULL)
+	ft_after(line, &str[fd], BUFF_SIZE);
+	if (str[fd] == NULL)
 	{
-		if ((ft_read(fd, line, &str, tmp)) == 0)
+		if ((ft_read(fd, line, &str[fd])) == 0)
 			return (0);
 		return (1);
 	}
